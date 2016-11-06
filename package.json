@@ -1,0 +1,19 @@
+{
+  "name": "clipboard-manager",
+  "version": "0.0.1",
+  "description": "A minimal clipboard manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-packager ./ --all --out=output/ --icon=icon.icns --overwrite"
+  },
+  "author": "Picchi Kevin",
+  "devDependencies": {
+    "electron": "^1.4.1",
+    "electron-packager": "^8.2.0"
+  },
+  "dependencies": {
+    "electron-compile": "^3.3.6",
+    "jquery": "^1.7.4"
+  }
+}
