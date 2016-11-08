@@ -1,15 +1,15 @@
-const electron = require('electron')
-const app = electron.app
-const BrowserWindow = electron.BrowserWindow
+'use strict';
+const {app, BrowserWindow} = require('electron');
+
 const path = require('path')
 const url = require('url')
+const pug = require('electron-pug')({pretty: true}, {});
 
 
 let mainWindow
 
 
 function createWindow () {
-
   mainWindow = new BrowserWindow({
     width: 800,
     height: 500,
@@ -19,9 +19,8 @@ function createWindow () {
     frame: true
   });
 
-  //load the index.html
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
+    pathname: path.join(__dirname, 'index.pug'),
     protocol: 'file:',
     slashes: true
   }))
@@ -33,7 +32,7 @@ function createWindow () {
   })
 }
 
-electron.app.on('browser-window-created',function(e,window) {
+app.on('browser-window-created',function(e,window) {
   window.setMenu(null);
 });
 

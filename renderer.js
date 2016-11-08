@@ -1,12 +1,9 @@
-
 let $ = require('jquery');
 const {clipboard} = require('electron')
 const {dialog} = require('electron').remote
-// console.log(dialog.showMessageBox({type:"warning", buttons: ["OK","NO"], title:"efwwefef", message: "feefwwef" }));
 
 
 var shell = require('electron').shell;
-//clipboard.writeText('Example String')
 
 var clipboardSave = []
 var somethingnewaddedohthisisalongvar = false;

@@ -8,12 +8,17 @@
     "package": "electron-packager ./ --all --out=output/ --icon=icon.icns --overwrite"
   },
   "author": "Picchi Kevin",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/PicchiKevin/clipboard.git"
+  },
   "devDependencies": {
     "electron": "^1.4.1",
     "electron-packager": "^8.2.0"
   },
   "dependencies": {
     "electron-compile": "^3.3.6",
+    "electron-pug": "^1.5.1",
     "jquery": "^1.7.4"
   }
 }
