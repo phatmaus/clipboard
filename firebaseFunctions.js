@@ -1,10 +1,12 @@
-var firebase = require("firebase");
-var constants = require("./constants.js");
-exports.formatForFirebase = function (str) {    
-    return str.trim().replace(/[\/\.\#\$\[\] ]/g, '').substring(constants.firebase.maxLength);//invalid firebase key chars
+'use strict'
+const firebase = require("firebase");
+const constants = require("./constants.js")();
+exports.getRef = function (str) {
+    let trimmed = str.trim().substring(0, constants.firebase.maxLength);
+    return Buffer(trimmed).toString("base64");
 }
 
-exports.firebaseInit = function () {    
+exports.firebaseInit = function () {//imported from fb console
     firebase.initializeApp({
         apiKey: "AIzaSyAtZ7DjnwDUGzfCbRLW9wolKgPOegmr9ds",
         authDomain: "ms-jargon.firebaseapp.com",

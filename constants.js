@@ -1,12 +1,19 @@
 module.exports = function () {
     return {
-        height: 500,
-        width: 800,
+        height: 420,
+        width: 600,
         globalHotKeyCombo: "CommandOrControl+C+Shift",
         doubleTapInterval: 222,
         firebase: {
             key: "definition",
-            maxLength: 22
+            maxLength: 140,
+            emptyDef: {
+                definitions: [],
+                lastUpdated: 0
+            }
+        },
+        ui: {
+            displayLimit: 10
         },
         errors:{
             errorDailogTitle: "error",

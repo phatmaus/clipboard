@@ -2,8 +2,7 @@ doctype html
 html
   head
     meta(charset='UTF-8')
-    title Clipboard Controller
-    link(rel='stylesheet', href='assets/css/photon.min.css', media='screen')
+    link(rel='stylesheet', href='assets/css/photon.css', media='screen')
     style(media='screen').
       .white {
         color: #fff !important;
@@ -11,21 +10,38 @@ html
       a {
         color: #333;
       }
-      td{
-      max-width:300px;
+      td {
+      max-width:400px;
       }
+      table {
+        background: "pink"
+      }
+      th.narrow {
+        max-width:30px;
+      }
+
   body.window
     header.toolbar.toolbar-header
       .toolbar-actions
         <h1 class="title">Jargon Lookup</h1>
-    .window-content
+    .window-content      
       .pane
+        h4 Here are the top #{defNum} definitions for this acronym
         table.table-striped
           thead
             tr
-              th definition
-              th Time
-              th Action
+              th Definition
+              th.narrow Action
           tbody.clipboard
-          input
+          - for(let definition of defData.definitions)
+            tr
+              td #{definition.description}
+              td 
+                button
+          - for(let n = 0; n < defNum - defData.definitions.length; n++)
+            tr
+              td xxx
+              td yyy                
+        div If you know of a beter definition, submit it here for everyone!(Max length:#{maxLength})
+        textarea.form-control 
   script(type='text/javascript', src='./window.js')

@@ -1,9 +1,10 @@
 'use strict';
+
 const electron = require("electron");
 const { app, BrowserWindow, Tray, globalShortcut, dialog, clipboard, Menu } = electron;
-const pug = require('electron-pug')({ pretty: true }, {});
 const constants = require("./constants.js")();
-const firebase = require("./firebaseFunctions")();
+const fbFuncs = require("./firebaseFunctions");
+const firebase = fbFuncs.firebaseInit();
 const path = require('path');
 const url = require('url');
 var events = require('events');
@@ -16,7 +17,12 @@ let opts;
 let screen;
 let mainWindow;
 let supportsTrayHighlightState;
-let definition = null;
+
+global.pugData = {
+  defNum: constants.ui.displayLimit,
+  maxLength: constants.firebase.maxLength
+};
+const pug = require('electron-pug')({ pretty: true }, global.pugData);
 
 menubar.app = app;
 
@@ -29,18 +35,8 @@ app.on('ready', function () {
   initOpts();
   initMenuBar();
   globalShortcut.register(constants.globalHotKeyCombo, function () {
-    showWindow();
+    toggleWindow();
   });
-});
-
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-});
-
-app.on('activate', function () {
-
 });
 
 menubar.setOption = function (opt, val) {
@@ -118,29 +114,20 @@ function initOpts() {
 }
 
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  let newMainWindow = new BrowserWindow({
     width: constants.width,
     height: constants.height,
     resizable: false,
     frame: false
   });
 
-  mainWindow.loadURL(url.format({
+  newMainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'index.pug'),
     protocol: 'file:',
     slashes: true
   }));
 
-  mainWindow.on('closed', function () {
-    mainWindow = null;
-  });
-
-  menubar.positioner = new Positioner(mainWindow)
-
-  mainWindow.on('blur', function () {
-    hideWindow();
-  })
-
+  mainWindow = newMainWindow;
 }
 
 function toggleWindow() {
@@ -152,49 +139,33 @@ function toggleWindow() {
 }
 
 function getData() {
-  let jargon = clipboard.readText().toLowerCase().trim().replace(/[\/\.\#\$\[\] ]/g, 's');//invalid firebase key chars
-  if(jargon === "") {
-    definition = null;
+  let jargon = fbFuncs.getRef(clipboard.readText());
+  if (jargon === "") {
+    global.pugData.defData = constants.firebase.emptyDef;
     showWindow();
   } else {
-    dialog.showErrorBox("", jargon);
     firebase.ref(`${constants.firebase.key}/${jargon}`)
-    .once('value')
-    .then(function (data) {
-      definition = data.val();
-      showWindow();
-    })
-    .catch(function (error) {
-      dialog.showErrorBox(constants.errors.errorDailogTitle, constants.errors.connectionErrorMessage);
-    });
+      .once('value')
+      .then(function (snapshot) {
+        let defData = snapshot.val();
+        global.pugData.defData = defData === null ? constants.firebase.emptyDef : defData;
+        showWindow();
+      })
+      .catch(function (error) {
+        dialog.showErrorBox(constants.errors.errorDailogTitle, constants.errors.connectionErrorMessage);
+      });
   }
-  
 }
 
 function showWindow() {
-  if (supportsTrayHighlightState) {
-    menubar.tray.setHighlightMode('always');
-  }
-  if (!mainWindow) {
-    createWindow();
-  }
-
-  menubar.emit('show');
-  mainWindow.show();
-  menubar.emit('after-show');
-  return;
+  let oldMainWindow = mainWindow;
+  createWindow();
+  oldMainWindow && oldMainWindow.close();
 }
 
 function hideWindow() {
-  if (supportsTrayHighlightState) {
-    menubar.tray.setHighlightMode('never');
-  }
   if (!mainWindow) {
     return;
   }
-  mainWindow.hide();  
-}
-
-function windowClear() {
-  mainWindow = null;
+  mainWindow.hide();
 }
