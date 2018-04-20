@@ -1,27 +1,36 @@
 'use strict';
-const { app, BrowserWindow } = require('electron');
-
-const path = require('path')
-const url = require('url')
+const electron = require("electron");
+const { app, BrowserWindow, Tray, globalShortcut } = electron;
 const pug = require('electron-pug')({ pretty: true }, {});
+const constants = require("./constants.js")();
+const path = require('path');
+const url = require('url');
 var events = require('events');
+let menubar = new events.EventEmitter();
 var fs = require('fs');
+const Positioner = require('electron-positioner');
+const extend = require('extend');
 
 let opts;
+let screen;
 let mainWindow;
+let supportsTrayHighlightState;
 
-var menubar = new events.EventEmitter();
+
 menubar.app = app;
 
 app.on('browser-window-created', function (e, window) {
   window.setMenu(null);
 });
 
-if (app.isReady()) {
-  createWindow()
-} else {
-  app.on('ready', createWindow)
-}
+app.on('ready', function () {
+  screen = electron.screen;
+  initOpts();
+  initMenuBar();
+  globalShortcut.register(constants.globalHotKeyCombo , function () {
+    alert("foo");
+  });
+});
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') {
@@ -30,9 +39,7 @@ app.on('window-all-closed', function () {
 });
 
 app.on('activate', function () {
-  if (mainWindow === null) {
-    createWindow()
-  }
+
 });
 
 menubar.setOption = function (opt, val) {
@@ -44,30 +51,7 @@ menubar.getOption = function (opt) {
 }
 
 function initMenuBar() {
-  if (typeof opts === 'undefined') {
-    opts = { dir: app.getAppPath() };
-  } else if (typeof opts === 'string') {
-    opts = { dir: opts }
-  } else if (!opts.dir) {
-    opts.dir = app.getAppPath();
-  } else if (!(path.isAbsolute(opts.dir))) {
-    opts.dir = path.resolve(opts.dir);
-  }
-  
-  if (!opts.windowPosition) {
-    opts.windowPosition = (process.platform === 'win32') ? 'trayBottomCenter' : 'trayCenter';
-  }
-  if (typeof opts.showDockIcon === 'undefined') {
-    opts.showDockIcon = false;
-  }
-  
-  // set width/height on opts to be usable before the window is created
-  opts.width = opts.width || 800
-  opts.height = opts.height || 500
-  opts.tooltip = opts.tooltip || ''
-  if (app.dock && !opts.showDockIcon) {
-    app.dock.hide();
-  }
+  initOpts();
 
   var iconPath = opts.icon || path.join(opts.dir, 'IconTemplate.png');
   var cachedBounds // cachedBounds are needed for double-clicked event
@@ -86,7 +70,7 @@ function initMenuBar() {
     console.log(e);
   }
 
-  function clicked (e, bounds) {
+  function clicked(e, bounds) {
     if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey || (mainWindow && mainWindow.isVisible())) {
       return hideWindow();
     }
@@ -95,14 +79,43 @@ function initMenuBar() {
   }
 }
 
+function initOpts() {
+  if (typeof opts === 'undefined') {
+    opts = {
+      dir: app.getAppPath()
+    };
+  } else if (typeof opts === 'string') {
+    opts = {
+      dir: opts
+    };
+  } else if (!opts.dir) {
+    opts.dir = app.getAppPath();
+  } else if (!(path.isAbsolute(opts.dir))) {
+    opts.dir = path.resolve(opts.dir);
+  }
+
+  if (!opts.windowPosition) {
+    opts.windowPosition = (process.platform === 'win32') ? 'trayBottomCenter' : 'trayCenter';
+  }
+  if (typeof opts.showDockIcon === 'undefined') {
+    opts.showDockIcon = false;
+  }
+
+  // set width/height on opts to be usable before the window is created
+  opts.width = opts.width || 800
+  opts.height = opts.height || 500
+  opts.tooltip = opts.tooltip || ''
+  if (app.dock && !opts.showDockIcon) {
+    app.dock.hide();
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 500,
-    resizable: true,
-    minHeight: 300,
-    minWidth: 600,
-    frame: true
+    width: constants.width,
+    height: constants.height,
+    resizable: false,
+    frame: false
   });
 
   mainWindow.loadURL(url.format({
@@ -112,53 +125,36 @@ function createWindow() {
   }));
 
   mainWindow.on('closed', function () {
-    mainWindow = null
+    mainWindow = null;
   });
+
+  menubar.positioner = new Positioner(mainWindow)
+
+  mainWindow.on('blur', function () {
+    hideWindow();
+  })
+
 }
 
-function showWindow (trayPos) {
+function showWindow(trayPos) {
   if (supportsTrayHighlightState) {
     menubar.tray.setHighlightMode('always');
   }
-  if (!menubar.window) {
+  if (!mainWindow) {
     createWindow();
   }
 
   menubar.emit('show');
-
-  if (trayPos && trayPos.x !== 0) {
-    // Cache the bounds
-    cachedBounds = trayPos;
-  } else if (cachedBounds) {
-    // Cached value will be used if showWindow is called without bounds data
-    trayPos = cachedBounds;
-  } else if (menubar.tray.getBounds) {
-    // Get the current tray bounds
-    trayPos = menubar.tray.getBounds();
-  }
-
-  // Default the window to the right if `trayPos` bounds are undefined or null.
-  var noBoundsPosition = null;
-  if ((trayPos === undefined || trayPos.x === 0) && opts.windowPosition.substr(0, 4) === 'tray') {
-    noBoundsPosition = (process.platform === 'win32') ? 'bottomRight' : 'topRight';
-  }
-
-  var position = menubar.positioner.calculate(noBoundsPosition || opts.windowPosition, trayPos);
-
-  var x = (opts.x !== undefined) ? opts.x : position.x;
-  var y = (opts.y !== undefined) ? opts.y : position.y;
-
-  mainWindow.setPosition(x, y)
   mainWindow.show();
   menubar.emit('after-show');
   return;
 }
 
-function hideWindow () {
+function hideWindow() {
   if (supportsTrayHighlightState) {
     menubar.tray.setHighlightMode('never');
   }
-  if (!menubar.window) {
+  if (!mainWindow) {
     return;
   }
   menubar.emit('hide')
@@ -166,11 +162,11 @@ function hideWindow () {
   menubar.emit('after-hide')
 }
 
-function windowClear () {
-  delete menubar.window
-  menubar.emit('after-close')
+function windowClear() {
+  mainWindow = null;
+  menubar.emit('after-close');
 }
 
-function emitBlur () {
+function emitBlur() {
   menubar.emit('focus-lost')
 }

@@ -19,7 +19,6 @@
   "dependencies": {
     "electron-compile": "^3.3.6",
     "electron-pug": "^1.5.1",
-    "jquery": "^1.7.4",
-    "menubar": "^5.2.3"
+    "jquery": "^1.7.4"
   }
 }
