@@ -17,8 +17,11 @@
     "electron-packager": "^8.2.0"
   },
   "dependencies": {
+    "bower": "^1.8.4",
     "electron-compile": "^3.3.6",
+    "electron-positioner": "^3.0.0",
     "electron-pug": "^1.5.1",
+    "firebase": "^4.13.0",
     "jquery": "^1.7.4"
   }
 }

@@ -1,8 +1,9 @@
 'use strict';
 const electron = require("electron");
-const { app, BrowserWindow, Tray, globalShortcut } = electron;
+const { app, BrowserWindow, Tray, globalShortcut, dialog, clipboard, Menu } = electron;
 const pug = require('electron-pug')({ pretty: true }, {});
 const constants = require("./constants.js")();
+const firebase = require("./firebaseFunctions")();
 const path = require('path');
 const url = require('url');
 var events = require('events');
@@ -15,7 +16,7 @@ let opts;
 let screen;
 let mainWindow;
 let supportsTrayHighlightState;
-
+let definition = null;
 
 menubar.app = app;
 
@@ -27,8 +28,8 @@ app.on('ready', function () {
   screen = electron.screen;
   initOpts();
   initMenuBar();
-  globalShortcut.register(constants.globalHotKeyCombo , function () {
-    toggleWindow();
+  globalShortcut.register(constants.globalHotKeyCombo, function () {
+    showWindow();
   });
 });
 
@@ -57,7 +58,13 @@ function initMenuBar() {
   var cachedBounds // cachedBounds are needed for double-clicked event
   var defaultClickEvent = opts.showOnRightClick ? 'right-click' : 'click';
 
-  menubar.tray = opts.tray || new Tray(iconPath);
+  menubar.tray = new Tray(iconPath);
+  menubar.tray.setContextMenu(new Menu.buildFromTemplate([
+    {
+      label: "quit",
+      role: "quit"
+    }
+  ]));
   menubar.tray.on(defaultClickEvent, clicked);
   menubar.tray.on('double-click', clicked);
   menubar.tray.setToolTip(opts.tooltip);
@@ -135,12 +142,33 @@ function createWindow() {
   })
 
 }
+
 function toggleWindow() {
-  if(mainWindow && mainWindow.isVisible()) {
+  if (mainWindow && mainWindow.isVisible()) {
     hideWindow();
   } else {
-    showWindow();
+    getData();
   }
+}
+
+function getData() {
+  let jargon = clipboard.readText().toLowerCase().trim().replace(/[\/\.\#\$\[\] ]/g, 's');//invalid firebase key chars
+  if(jargon === "") {
+    definition = null;
+    showWindow();
+  } else {
+    dialog.showErrorBox("", jargon);
+    firebase.ref(`${constants.firebase.key}/${jargon}`)
+    .once('value')
+    .then(function (data) {
+      definition = data.val();
+      showWindow();
+    })
+    .catch(function (error) {
+      dialog.showErrorBox(constants.errors.errorDailogTitle, constants.errors.connectionErrorMessage);
+    });
+  }
+  
 }
 
 function showWindow() {
@@ -164,16 +192,9 @@ function hideWindow() {
   if (!mainWindow) {
     return;
   }
-  menubar.emit('hide')
-  mainWindow.hide();
-  menubar.emit('after-hide')
+  mainWindow.hide();  
 }
 
 function windowClear() {
   mainWindow = null;
-  menubar.emit('after-close');
-}
-
-function emitBlur() {
-  menubar.emit('focus-lost');
 }

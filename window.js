@@ -59,8 +59,3 @@ var checkClipboard = setInterval(function () {
   }
 }, 100);
 
-
-$(document).on('click', 'a[href^="http"]', function (event) {
-  event.preventDefault();
-  shell.openExternal(this.href);
-});
