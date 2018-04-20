@@ -28,7 +28,7 @@ app.on('ready', function () {
   initOpts();
   initMenuBar();
   globalShortcut.register(constants.globalHotKeyCombo , function () {
-    alert("foo");
+    toggleWindow();
   });
 });
 
@@ -135,8 +135,15 @@ function createWindow() {
   })
 
 }
+function toggleWindow() {
+  if(mainWindow && mainWindow.isVisible()) {
+    hideWindow();
+  } else {
+    showWindow();
+  }
+}
 
-function showWindow(trayPos) {
+function showWindow() {
   if (supportsTrayHighlightState) {
     menubar.tray.setHighlightMode('always');
   }
@@ -168,5 +175,5 @@ function windowClear() {
 }
 
 function emitBlur() {
-  menubar.emit('focus-lost')
+  menubar.emit('focus-lost');
 }

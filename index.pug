@@ -5,38 +5,38 @@ html
     title Clipboard Controller
     link(rel='stylesheet', href='assets/css/photon.min.css', media='screen')
     style(media='screen').
-      .white{
-      color: #fff !important;
+      .white {
+        color: #fff !important;
       }
-      a{
-      color: #333;
+      a {
+        color: #333;
       }
       td{
       max-width:300px;
       }
   body.window
-      header.toolbar.toolbar-header
-        .toolbar-actions
-          <h1 class="title">Clipboard</h1>
-          .btn-group
-            button.btn.btn-default
-              span.icon.icon-home
-            button.btn.btn-default(onclick="dialog.showMessageBox({type:'info', buttons: ['OK'], title:'Petit info', message: 'feefwwef' })")
-              span.icon.icon-info
-            button.btn.btn-default
-              span.icon.icon-trash
-          button.btn.btn-default.btn-dropdown.pull-right
-            span.icon.icon-megaphone
-      .window-content
-        .pane
-          table.table-striped
-            thead
-              tr
-                th Preview
-                th Time
-                th Action
-            tbody.clipboard
-      footer.toolbar.toolbar-footer
-        h1.title
-          a(href='https://picchi.ch/') Picchi Kevin 2016
+    header.toolbar.toolbar-header
+      .toolbar-actions
+        <h1 class="title">Clipboard</h1>
+        .btn-group
+          button.btn.btn-default
+            span.icon.icon-home
+          button.btn.btn-default(onclick="dialog.showMessageBox({type:'info', buttons: ['OK'], title:'Petit info', message: 'feefwwef' })")
+            span.icon.icon-info
+          button.btn.btn-default
+            span.icon.icon-trash
+        button.btn.btn-default.btn-dropdown.pull-right
+          span.icon.icon-megaphone
+    .window-content
+      .pane
+        table.table-striped
+          thead
+            tr
+              th Preview
+              th Time
+              th Action
+          tbody.clipboard
+    footer.toolbar.toolbar-footer
+      h1.title
+        a(href='https://picchi.ch/') Picchi Kevin 2016
   script(type='text/javascript', src='./front_end.js')
